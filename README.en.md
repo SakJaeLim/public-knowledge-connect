@@ -87,7 +87,7 @@ npm run verify:live
 
 Offline tests cover input validation, failure classification, response limits, web request boundaries and MCP behavior. Live verification calls both sources through MCP and writes `artifacts/live-verification.json`; artifacts are excluded from Git.
 
-On 5 November 2026, 12 automated tests and live MCP calls to both sources passed on Windows. The in-app browser was used to check source selection, example lists, resource properties and run-record downloads. See [validation notes](docs/VALIDATION.md) for CI and platform scope. Offline CI cannot establish current source availability or AI answer accuracy.
+On 5 November 2026, 12 automated tests and live MCP calls to both sources passed on Windows. The in-app browser was used to check source selection, example lists, resource properties and run-record downloads. Node 24 CI also passed on Windows, macOS and Linux. See [validation notes](docs/VALIDATION.md) for platform scope. Offline CI cannot establish current source availability or AI answer accuracy.
 
 ## Next steps
 

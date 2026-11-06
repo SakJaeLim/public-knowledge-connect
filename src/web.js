@@ -7,6 +7,7 @@ import { queryPublicRecords } from './query.js';
 const publicRoot = new URL('../public/', import.meta.url);
 const assets = new Map([['/', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']], ['/style.css', ['style.css', 'text/css; charset=utf-8']],
+  ['/search.css', ['search.css', 'text/css; charset=utf-8']],
   ['/open-props.min.css', ['open-props.min.css', 'text/css']], ['/network.svg', ['network.svg', 'image/svg+xml']]]);
 
 export function createWebServer(queryFn = queryPublicRecords) {

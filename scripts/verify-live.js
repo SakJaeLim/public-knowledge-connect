@@ -6,7 +6,7 @@ import { SOURCES } from '../src/catalog.js';
 
 const root = new URL('../', import.meta.url);
 const directory = new URL('artifacts/', root); await mkdir(directory, { recursive: true });
-const client = new Client({ name: 'live-verification', version: '0.1.0' });
+const client = new Client({ name: 'live-verification', version: '0.2.0' });
 const transport = new StdioClientTransport({ command: process.execPath, args: [fileURLToPath(new URL('src/mcp.js', root))], stderr: 'pipe' });
 const records = [];
 try {

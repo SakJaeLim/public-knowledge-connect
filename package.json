@@ -1,16 +1,19 @@
 {
   "name": "public-knowledge-connect",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Query Korean public linked data with source links from a local web app or MCP client.",
   "license": "MIT",
-  "engines": {"node": ">=24.0.0"},
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "start": "node src/web.js",
     "mcp": "node src/mcp.js",
     "test": "node --test test/*.test.js",
     "verify:live": "node scripts/verify-live.js",
+    "verify:search": "node scripts/verify-search.js",
     "config:mcp": "node scripts/mcp-config.js"
   },
   "dependencies": {

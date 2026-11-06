@@ -15,7 +15,7 @@ test('loopback app serves the module and source catalog with a restrictive CSP',
   const { url } = await setup(t);
   const page = await fetch(url); assert.match(page.headers.get('content-security-policy'), /frame-ancestors 'none'/);
   assert.match(await page.text(), /script type="module" src="app.js"/);
-  for (const path of ['/app.js', '/style.css', '/open-props.min.css', '/network.svg']) assert.equal((await fetch(url + path)).status, 200);
+  for (const path of ['/app.js', '/style.css', '/search.css', '/open-props.min.css', '/network.svg']) assert.equal((await fetch(url + path)).status, 200);
   const sources = await (await fetch(url + '/api/sources')).json(); assert.equal(sources.length, 2);
   assert.ok(sources.every(s => s.connectionStatus === 'not_checked'));
 });

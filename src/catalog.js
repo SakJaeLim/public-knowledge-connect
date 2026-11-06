@@ -19,6 +19,8 @@ export const SOURCES = Object.freeze({
     documentation: 'https://lod.work.go.kr/lod_endpoint.do',
     exampleUri: 'http://lod.work.go.kr/job/직업/A012001',
     exampleLabel: '공군장교의 수행직무',
+    search: Object.freeze({ mode: 'label_contains', minLength: 2, maxLength: 80,
+      examples: ['디자인', '간호', '데이터'], documentation: 'https://lod.work.go.kr/lod_example.do' }),
     resourcePattern: /^https?:\/\/lod\.work\.go\.kr\/job\/[\p{L}\p{N}._~\/-]+$/u,
     exampleQuery: 'SELECT ?uri ?label WHERE { ?uri a <http://lod.work.go.kr/job/직업> ; <http://www.w3.org/2000/01/rdf-schema#label> ?label . }',
     notice: '채용 공고나 현재 모집 중인 훈련 목록이 아닙니다. 관련 자격과 다른 기관의 코드를 자동으로 연결하지 않습니다. 재배포 조건은 별도 확인이 필요합니다.',
@@ -30,16 +32,26 @@ export const SOURCES = Object.freeze({
 export function listSources() {
   return Object.values(SOURCES).map(({ resourcePattern, exampleQuery, ...publicSource }) => ({
     ...publicSource,
-    capabilities: ['examples', 'describe'],
-    unsupported: ['free_text_search', 'cross_agency_join', 'qualification_eligibility'],
+    capabilities: publicSource.search ? ['search', 'examples', 'describe'] : ['examples', 'describe'],
+    unsupported: [...(publicSource.search ? [] : ['name_search']), 'semantic_search', 'cross_agency_join', 'qualification_eligibility'],
     connectionStatus: 'not_checked',
   }));
 }
 
-export function buildQuery({ source, operation, uri, limit }) {
+export function buildQuery({ source, operation, uri, term, limit }) {
   if (!Object.hasOwn(SOURCES, source)) throw new Error('UNKNOWN_SOURCE');
   const profile = SOURCES[source];
   if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new Error('INVALID_LIMIT');
+  if (operation === 'search') {
+    if (!profile.search) throw new Error('SEARCH_NOT_SUPPORTED');
+    if (uri !== undefined) throw new Error('UNEXPECTED_URI');
+    if (typeof term !== 'string' || /[\u0000-\u001f\u007f-\u009f]/u.test(term)) throw new Error('INVALID_TERM');
+    const normalized = term.trim().normalize('NFC');
+    if (normalized.length < 2 || normalized.length > 80) throw new Error('INVALID_TERM');
+    const literal = JSON.stringify(normalized);
+    return `SELECT DISTINCT ?uri ?label WHERE { ?uri a <http://lod.work.go.kr/job/직업> ; <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(CONTAINS(LCASE(STR(?label)), LCASE(${literal}))) } ORDER BY ?label ?uri LIMIT ${limit + 1}`;
+  }
+  if (term !== undefined) throw new Error('UNEXPECTED_TERM');
   if (operation === 'examples') {
     if (uri !== undefined) throw new Error('UNEXPECTED_URI');
     return `${profile.exampleQuery} LIMIT ${limit + 1}`;

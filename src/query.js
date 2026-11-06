@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { SOURCES, buildQuery } from './catalog.js';
 
 export const inputSchema = z.strictObject({
-  source: z.enum(['nlk', 'worknet']), operation: z.enum(['examples', 'describe']),
+  source: z.enum(['nlk', 'worknet']), operation: z.enum(['examples', 'describe', 'search']),
+  term: z.string().trim().min(2).max(80).regex(/^[^\u0000-\u001f\u007f-\u009f]*$/u).transform(value => value.normalize('NFC')).optional(),
   uri: z.string().max(500).optional(), limit: z.number().int().min(1).max(20).default(5),
 });
 const cellSchema = z.object({
@@ -40,12 +41,14 @@ export async function readBounded(response, maximum = 2_000_000) {
 
 export async function queryPublicRecords(input, { fetchImpl = fetch, timeoutMs = 20_000 } = {}) {
   const started = Date.now(); const runId = randomUUID();
-  const base = { runId, startedAt: new Date(started).toISOString(), appVersion: '0.1.0', mode: 'live', factVerified: false };
+  const base = { runId, startedAt: new Date(started).toISOString(), appVersion: '0.2.0', mode: 'live', factVerified: false };
   let parameters, query, profile;
   try { parameters = inputSchema.parse(input); query = buildQuery(parameters); profile = SOURCES[parameters.source]; }
-  catch { return { ...base, status: 'error', code: 'INVALID_REQUEST', message: '지원하는 기관과 조회 방식, 원문 주소를 확인해 주세요.', durationMs: Date.now() - started }; }
+  catch { return { ...base, status: 'error', code: 'INVALID_REQUEST', message: '기관과 조회 방식, 원문 주소를 확인해 주세요. 이름 검색은 워크넷에서 2~80자로 지원합니다.', durationMs: Date.now() - started }; }
   const provenance = { sourceId: profile.id, sourceName: profile.name, endpoint: profile.endpoint,
-    documentation: profile.documentation, resourceUri: parameters.uri ?? null, query, limit: parameters.limit,
+    documentation: profile.documentation, operation: parameters.operation,
+    search: parameters.operation === 'search' ? { term: parameters.term, mode: profile.search.mode, documentation: profile.search.documentation } : null,
+    resourceUri: parameters.uri ?? null, query, limit: parameters.limit,
     notice: profile.notice, authentication: 'none' };
   const url = new URL(profile.endpoint); url.searchParams.set('query', query);
   if (profile.id === 'worknet') url.searchParams.set('resultType', 'JSON');
